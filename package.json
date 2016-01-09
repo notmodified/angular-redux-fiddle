@@ -1,0 +1,33 @@
+{
+  "name": "angular-redux-fiddle",
+  "version": "1.0.0",
+  "description": "angular redux fiddle",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/notmodified/angular-redux-fiddle.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/notmodified/angular-redux-fiddle/issues"
+  },
+  "homepage": "https://github.com/notmodified/angular-redux-fiddle#readme",
+  "devDependencies": {
+    "angular": "^1.4.8",
+    "angular-ui-router": "^0.2.15",
+    "babel-core": "^6.4.0",
+    "babel-loader": "^6.2.1",
+    "babel-preset-es2015": "^6.3.13",
+    "ng-redux": "^3.1.2",
+    "redux": "^3.0.5",
+    "redux-logger": "^2.3.1",
+    "redux-thunk": "^1.0.3",
+    "redux-ui-router": "^0.4.3",
+    "webpack": "^1.12.10",
+    "webpack-dev-server": "^1.14.0"
+  }
+}
