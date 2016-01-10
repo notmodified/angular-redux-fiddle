@@ -1,3 +1,6 @@
+const autoprefixer = require('autoprefixer');
+
+
 module.exports = {
   entry: "./src/main.js",
   devtool: 'source-map',
@@ -6,13 +9,14 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.css$/, loader: "style!css" },
+      { test: /\.scss$/, loaders: ["style", "css", "postcss", "sass"] },
       { test: /\.jsx?$/, exclude: /node_modules/, loader: 'babel',
         query: {
           presets: ['es2015']
         }
       }
     ]
-  }
+  },
+  postcss: () => [autoprefixer]
 
 };

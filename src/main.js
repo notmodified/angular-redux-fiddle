@@ -1,69 +1,128 @@
+import './main.scss';
+
 import 'angular';
 import createLogger from 'redux-logger';
 import thunk from 'redux-thunk';
-import { createStore, combineReducers } from 'redux';
+import {createStore, combineReducers} from 'redux';
 import ngRedux from 'ng-redux';
 import uiRouter from 'angular-ui-router';
-import { stateGo, router } from 'redux-ui-router';
+import {router} from 'redux-ui-router';
 import ngReduxUiRouter from 'redux-ui-router';
 
-function counter(state = 0, action) {
-  switch (action.type) {
-    case 'INCREMENT':
-      return state + 1;
-    case 'DECREMENT':
-      return state - 1;
-    default:
-      return state;
-  }
-}
+import actions from './actions';
+import * as reducers from './reducers';
 
-const actions = {
-  inc: () => dispatch => {
-    setTimeout(() => dispatch({type: 'INCREMENT'}), 10000);
-  },
-  dec() { return { type: 'DECREMENT' } },
-  stateGo
-};
+const directiveControllerFactory = mapper =>
+  ['$ngRedux', '$scope', 'actions', function($ngRedux, $scope, actions) {
+    const unsubscribe = $ngRedux.connect(mapper, actions)(this);
+    $scope.$on('$destroy', unsubscribe);
+  }];
 
-angular.module('app', [ngRedux, uiRouter, ngReduxUiRouter])
+angular.module('app', [ngRedux, uiRouter, ngReduxUiRouter, actions])
+  .run(['$ngRedux', '$rootScope', '$stateParams', 'actions',
+       function ($ngRedux, $rootScope, $stateParams, actions) {
+
+    $ngRedux.subscribe(() => {
+      let state = $ngRedux.getState();
+      if (state.subjectLoad.changed) {
+        $ngRedux.dispatch(actions.loadSubject(state.subjectLoad.id));
+      }
+    });
+
+  }])
   .config(($ngReduxProvider, $stateProvider, $urlRouterProvider) => {
-    const reducer = combineReducers({router, counter});
+    const reducer = combineReducers(Object.assign({router}, reducers));
 
     $ngReduxProvider.createStoreWith(reducer, [
-      createLogger({collapsed: true}),
       'ngUiRouterMiddleware',
-      thunk
+      thunk,
+      createLogger({collapsed: true})
     ]);
 
-    $urlRouterProvider.otherwise('/app1');
+    $urlRouterProvider.otherwise('/app/1/one');
 
-    const tmpl = n => `<h1>app${n}</h1><pre>{{ vm | json }}</pre><div a-directive></div>`;
-    const url = u => `/app${u}:id`;
-    const one = {url: url(1), template: tmpl(1)};
-    const two = {url: url(2), template: tmpl(2)};
+    const tmpl = `
+      <ul class="form-steps">
+        <li><a href="" ui-sref-active="form-steps--highlight" ui-sref="app.1">1</a></li>
+        <li><a href="" ui-sref-active="form-steps--highlight" ui-sref="app.2">2</a></li>
+        <li><a href="" ui-sref-active="form-steps--highlight" ui-sref="app.3">3</a></li>
+        <li><a href="" ui-sref-active="form-steps--highlight" ui-sref="app.4">4</a></li>
+      </ul>
+
+      <div ui-view></div>
+
+      <pre>{{vm | json}}</pre>
+    `;
+    const root = {
+      template: tmpl,
+      abstract: true,
+      url: '/app/:id'
+    };
+    const one = {
+      url: '/one',
+      template: '<step-one/>'
+    };
+    const two = {
+      url: '/two',
+      template: '<step-two/>'
+    };
 
     $stateProvider
-      .state('app1', one)
-      .state('app2', two);
+      .state('app', root)
+      .state('app.1', one)
+      .state('app.2', two);
   })
-  .directive('aDirective', () => ({
+  .directive('stepOne', () => ({
     template: `
-    <h1>#{{vm.counter}}</h1>
-    <button ng-click="vm.inc()">inc</button>
-    <button ng-click="vm.dec()">dec</button>
-    <button ng-click="vm.stateGo('app1', {id: 1})">app1</button>
-    <button ng-click="vm.stateGo('app2', {id: 2})">app2</button>
+
+      <form class="a-form">
+        <div class="a-form__field">
+          <label for="afield"">a field</label>
+          <input id="afield" type="text" ng-model="vm.subject.afield">
+        </div>
+        <div class="a-form__field">
+          <label for="anotherfield"">another field</label>
+          <input id="anotherfield" type="text" ng-model="vm.subject.anotherfield">
+        </div>
+        <div class="a-form__field">
+          <label for="morefield"">more field</label>
+          <input id="morefield" type="text" ng-model="vm.subject.morefield">
+        </div>
+        <div class="a-form__button-bar">
+          <button ng-click="vm.updateSubject(vm.subject, vm.currentStateName)">Next</button>
+        </div>
+      </form>
     `,
     bindToController: true,
     controllerAs: 'vm',
-    controller: ['$ngRedux', '$scope', function($ngRedux, $scope) {
-      const mapState = (state) => ({
-        counter: state.counter,
-        router: state.router
-      });
+    controller: directiveControllerFactory(state => {
+      return {
+        currentStateName: state.router.currentState.name,
+        subject: Object.assign({}, state.subject)
+      }})
+  }))
+  .directive('stepTwo', () => ({
+    template: `
 
-      const unsubscribe = $ngRedux.connect(mapState, actions)(this);
-      $scope.$on('$destroy', unsubscribe);
-    }]
+      <form class="a-form">
+        <div class="a-form__field">
+          <label for="afield"">a step 2 field</label>
+          <input id="afield" type="text" ng-model="vm.subject.step2field">
+        </div>
+        <div class="a-form__field">
+          <label for="anotherfield"">step 2 field 2</label>
+          <input id="anotherfield" type="text" ng-model="vm.subject.anotherStep2Field">
+        </div>
+        <div class="a-form__button-bar">
+          <button ng-click="vm.updateSubject(vm.subject, vm.currentStateName)">Next</button>
+        </div>
+      </form>
+    `,
+    bindToController: true,
+    controllerAs: 'vm',
+    controller: directiveControllerFactory(state => {
+      return {
+        currentStateName: state.router.currentState.name,
+        subject: Object.assign({}, state.subject)
+      }})
   }));
