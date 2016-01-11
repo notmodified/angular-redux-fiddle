@@ -79,7 +79,7 @@ header {
       flex: 1;
     }
 
-    & > input {
+    & > input, & > select {
       flex: 3;
 
       font-size: 1em;

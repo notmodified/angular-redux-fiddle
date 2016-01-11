@@ -12,24 +12,10 @@ import ngReduxUiRouter from 'redux-ui-router';
 import actions from './actions';
 import * as reducers from './reducers';
 
-const directiveControllerFactory = mapper =>
-  ['$ngRedux', '$scope', 'actions', function($ngRedux, $scope, actions) {
-    const unsubscribe = $ngRedux.connect(mapper, actions)(this);
-    $scope.$on('$destroy', unsubscribe);
-  }];
+import {StepOne, StepTwo, StepThree, StepFour} from './steps';
+import rootLayout from './root.layout';
 
 angular.module('app', [ngRedux, uiRouter, ngReduxUiRouter, actions])
-  .run(['$ngRedux', '$rootScope', '$stateParams', 'actions',
-       function ($ngRedux, $rootScope, $stateParams, actions) {
-
-    $ngRedux.subscribe(() => {
-      let state = $ngRedux.getState();
-      if (state.subjectLoad.changed) {
-        $ngRedux.dispatch(actions.loadSubject(state.subjectLoad.id));
-      }
-    });
-
-  }])
   .config(($ngReduxProvider, $stateProvider, $urlRouterProvider) => {
     const reducer = combineReducers(Object.assign({router}, reducers));
 
@@ -41,88 +27,54 @@ angular.module('app', [ngRedux, uiRouter, ngReduxUiRouter, actions])
 
     $urlRouterProvider.otherwise('/app/1/one');
 
-    const tmpl = `
-      <ul class="form-steps">
-        <li><a href="" ui-sref-active="form-steps--highlight" ui-sref="app.1">1</a></li>
-        <li><a href="" ui-sref-active="form-steps--highlight" ui-sref="app.2">2</a></li>
-        <li><a href="" ui-sref-active="form-steps--highlight" ui-sref="app.3">3</a></li>
-        <li><a href="" ui-sref-active="form-steps--highlight" ui-sref="app.4">4</a></li>
-      </ul>
-
-      <div ui-view></div>
-
-      <pre>{{vm | json}}</pre>
-    `;
     const root = {
-      template: tmpl,
+      template: rootLayout,
       abstract: true,
+      resolve: {
+        dropdownoptions: () => ([
+          { id: 1, label: "one" },
+          { id: 2, label: "two" },
+          { id: 3, label: "three" },
+          { id: 4, label: "four" },
+          { id: 5, label: "five" },
+        ])
+      },
       url: '/app/:id'
     };
-    const one = {
-      url: '/one',
-      template: '<step-one/>'
-    };
-    const two = {
-      url: '/two',
-      template: '<step-two/>'
-    };
+    const stepFactory = (name) => ({
+      url: `/${name}`,
+      template: `<step-${name} dropdownoptions="vm.dropdownoptions"/>`,
+      controllerAs: 'vm',
+      controller: ['dropdownoptions', function(dropdownoptions) {
+        this.dropdownoptions = dropdownoptions;
+      }]
+    });
 
     $stateProvider
-      .state('app', root)
-      .state('app.1', one)
-      .state('app.2', two);
+      .state('app', root);
+
+    ['one', 'two', 'three', 'four'].forEach(
+      s => $stateProvider.state(`app.${s}`, stepFactory(s))
+    )
+
   })
-  .directive('stepOne', () => ({
-    template: `
+  .run(['$ngRedux', '$rootScope', '$stateParams', 'actions',
+       function ($ngRedux, $rootScope, $stateParams, actions) {
 
-      <form class="a-form">
-        <div class="a-form__field">
-          <label for="afield"">a field</label>
-          <input id="afield" type="text" ng-model="vm.subject.afield">
-        </div>
-        <div class="a-form__field">
-          <label for="anotherfield"">another field</label>
-          <input id="anotherfield" type="text" ng-model="vm.subject.anotherfield">
-        </div>
-        <div class="a-form__field">
-          <label for="morefield"">more field</label>
-          <input id="morefield" type="text" ng-model="vm.subject.morefield">
-        </div>
-        <div class="a-form__button-bar">
-          <button ng-click="vm.updateSubject(vm.subject, vm.currentStateName)">Next</button>
-        </div>
-      </form>
-    `,
-    bindToController: true,
-    controllerAs: 'vm',
-    controller: directiveControllerFactory(state => {
-      return {
-        currentStateName: state.router.currentState.name,
-        subject: Object.assign({}, state.subject)
-      }})
-  }))
-  .directive('stepTwo', () => ({
-    template: `
+    $ngRedux.subscribe(() => {
+      let state = $ngRedux.getState();
+      if (state.subjectLoad.changed) {
+        $ngRedux.dispatch(actions.loadSubject(state.subjectLoad.id));
+      }
+    });
 
-      <form class="a-form">
-        <div class="a-form__field">
-          <label for="afield"">a step 2 field</label>
-          <input id="afield" type="text" ng-model="vm.subject.step2field">
-        </div>
-        <div class="a-form__field">
-          <label for="anotherfield"">step 2 field 2</label>
-          <input id="anotherfield" type="text" ng-model="vm.subject.anotherStep2Field">
-        </div>
-        <div class="a-form__button-bar">
-          <button ng-click="vm.updateSubject(vm.subject, vm.currentStateName)">Next</button>
-        </div>
-      </form>
-    `,
-    bindToController: true,
-    controllerAs: 'vm',
-    controller: directiveControllerFactory(state => {
-      return {
-        currentStateName: state.router.currentState.name,
-        subject: Object.assign({}, state.subject)
-      }})
-  }));
+    $rootScope.$on('$stateChangeSuccess', () => {
+      $ngRedux.dispatch(actions.stateChangeSuccess($stateParams.id));
+    });
+
+  }])
+  .directive('stepOne', StepOne)
+  .directive('stepTwo', StepTwo)
+  .directive('stepThree', StepThree)
+  .directive('stepFour', StepFour)
+  ;

@@ -10,13 +10,9 @@ export function subject(state = {}, action) {
 
 export function subjectLoad(state = {id: undefined, changed: false}, action) {
   switch (action.type) {
-    case '@@reduxUiRouter/$stateChangeSuccess':
-      if (action.payload &&
-          action.payload.currentParams &&
-          action.payload.currentParams.id &&
-          action.payload.currentParams.id !== state.id
-         ) {
-        return {id: action.payload.currentParams.id, changed: true};
+    case 'STATE_CHANGE':
+      if (action.id && action.id !== state.id) {
+        return {id: action.id, changed: true};
       } else {
         return state
       }
