@@ -13,6 +13,7 @@ const baseDirective = {
   controllerAs: 'vm',
   controller: directiveControllerFactory(state => {
     return {
+      validation: Object.assign({}, state.validation),
       currentStateName: state.router.currentState.name,
       subject: Object.assign({}, state.subject)
     }})
@@ -49,14 +50,16 @@ export const StepTwo = () => Object.assign(Object.create(baseDirective), {
       </div>
       <div class="a-form__field">
         <label for="anotherfield">step 2 field 2</label>
-        <input id="anotherfield" type="text" ng-model="vm.subject.anotherStep2Field">
+        <input id="anotherfield" type="text" ng-model="vm.subject.anotherStep2field">
       </div>
       <div class="a-form__field">
         <label for="dropdownfield">dropdown field</label>
         <select id="dropdownfield"
                 ng-model="vm.subject.dropdown"
                 ng-options="i as i.label for i in vm.dropdownoptions track by i.id"
-        ></select>
+        >
+          <option value="">Select something</option>
+        </select>
       </div>
       <div class="a-form__button-bar">
         <button ng-click="vm.updateSubject(vm.subject, vm.currentStateName)">Next</button>
@@ -81,15 +84,14 @@ export const StepThree = () => Object.assign(Object.create(baseDirective), {
 
 export const StepFour = () => Object.assign(Object.create(baseDirective), {
   template: `
-    <form class="a-form">
-      <div class="a-form__field">
-        <label for="afield"">a step 4 field</label>
-        <input id="afield" type="text" ng-model="vm.subject.step4field">
-      </div>
-      <div class="a-form__button-bar">
-        <button ng-click="vm.updateSubject(vm.subject, vm.currentStateName)">Next</button>
-      </div>
-    </form>
+  <div class="a-validation">
+    <ul class="a-validation__required">
+      <li ng-repeat="e in vm.validation.required">{{e.message}}</li>
+    </ul>
+    <ul class="a-validation__recommended">
+      <li ng-repeat="e in vm.validation.recommended">{{e.message}}</li>
+    </ul>
+  </div>
   `
 });
 

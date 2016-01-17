@@ -23,5 +23,14 @@ export function subjectLoad(state = {id: undefined, changed: false}, action) {
   };
 }
 
+export function validation(state = {}, action) {
+  switch (action.type) {
+    case 'VALIDATION_COMPLETE':
+      return Object.assign({}, state, action.payload);
+    default:
+      return state;
+  }
+}
 
-export default {subject, subjectLoad};
+
+export default {subject, subjectLoad, validation};

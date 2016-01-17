@@ -32,11 +32,11 @@ angular.module('app', [ngRedux, uiRouter, ngReduxUiRouter, actions])
       abstract: true,
       resolve: {
         dropdownoptions: () => ([
-          { id: 1, label: "one" },
-          { id: 2, label: "two" },
-          { id: 3, label: "three" },
-          { id: 4, label: "four" },
-          { id: 5, label: "five" },
+          { ident: 1, label: "one" },
+          { ident: 2, label: "two" },
+          { ident: 3, label: "three" },
+          { ident: 4, label: "four" },
+          { ident: 5, label: "five" },
         ])
       },
       url: '/app/:id'
